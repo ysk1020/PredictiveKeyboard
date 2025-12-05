@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python cache
+*.cache/
+
+# PyTorch / large data files
+*.pt
+*.pth
+*.bin
+
+# Model artifacts
+model/weights.pt
+model/checkpoints/
+checkpoints/
+
+# Logs
+logs/
+*.log
+
+# VSCode settings
+.vscode/
+
+# Node (if frontend added)
+node_modules/
+dist/
+
+*.txt
+data/
