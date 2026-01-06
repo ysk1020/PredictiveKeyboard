@@ -1,0 +1,9 @@
+{
+  "sequence_length": 4,
+  "embed_dim": 64,
+  "hidden_dim": 128,
+  "lr": 0.001,
+  "epochs": 3,
+  "max_train_samles": 10000,
+  "top_k": 3
+}
