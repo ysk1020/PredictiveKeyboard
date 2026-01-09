@@ -203,8 +203,8 @@ def suggest_next_words(prompt:str, artifacts_dir: Path, top_k: int =3)-> List[st
 
 def main():
     cfg = Config(epochs=3)  # start small locally
-    text_path = Path("./data/sherlock-holm.es_stories_plain-text_advs.txt")
-    artifacts_dir = Path("./artifacts")
+    text_path = Path("../data/sherlock-holmes_stories_plain-text_advs.txt")
+    artifacts_dir = Path("../artifacts")
 
     train_model(text_path=text_path, artifacts_dir=artifacts_dir, cfg=cfg)
 
