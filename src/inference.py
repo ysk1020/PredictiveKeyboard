@@ -14,6 +14,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 import torch
+import unicodedata
 import nltk
 from nltk.tokenize import word_tokenize
 
@@ -83,11 +84,33 @@ def load_bundle():
     model = load_model(weights_path, vocab_size, cfg, device)
     return ModelBundle(model=model, word2idx=word2idx, idx2word=idx2word, cfg=cfg, device=device, unknown_idx=unknown_idx, sequence_length=sequence_length)
 
-def preprocess_input():
-    pass
+def preprocess_input(text:str, word2idx: dict[str, int], unknown_idx: int, sequence_length: int) -> dict:
+    text = text.lower()
+    text = text.strip()
+    text = unicodedata.normalize('NFKD', text)
+    tokens = word_tokenize(text)
+    truncated = False
+    if sequence_length is not None and len(tokens) > sequence_length:
+        tokens = tokens[-sequence_length:]
+        truncated = True
 
-def predict_next_word():
-    pass
+    # Map tokens -> ids using vocab, fallback to unknown_idx for OOV
+    input_ids = [word2idx.get(token, unknown_idx) for token in tokens]
+
+    # Convert to tensor with batch dimension: (1, seq_len)
+    input_tensor = torch.tensor(input_ids, dtype=torch.long).unsqueeze(0)
+    return {"text": text, "input_tensor": input_tensor, "truncated": truncated}
+
+def predict_next_word(bundle: ModelBundle, input_tensor: torch.Tensor) -> str:
+    model = bundle.model
+    device= bundle.device
+
+    input_tensor = input_tensor.to(device)
+    with torch.no_grad():
+        logits = model(input_tensor)
+        predicted_idx = torch.argmax(logits, dim=-1).item()
+    predicted_word = bundle.idx2word.get(predicted_idx, "<unk>")
+    return predicted_word
 
 def write_output():
     pass
