@@ -49,8 +49,12 @@ def load_config(CONFIG_PATH: Path)-> Config:
 def load_vocab(VOCAB_PATH: Path) -> tuple[dict[str, int], dict[int, str], int]:
     vocab_data = json.loads((VOCAB_PATH).read_text())
     word2idx = vocab_data['word2idx']
-    idx2word = vocab_data['idx2word']
-    unknown_idx = vocab_data['<unk>']
+    idx2word = {int(k): v for k, v in vocab_data["idx2word"].items()}
+    unknown_idx = word2idx.get("<unk>")
+    if unknown_idx is None:
+        unknown_idx = word2idx.get("<UNK>")
+    if unknown_idx is None:
+        raise KeyError("Neither '<unk>' nor '<UNK>' found inside word2idx")
     return word2idx, idx2word, unknown_idx
 
 def load_model(weights_path: str|Path, vocab_size:int, cfg, device:torch.device)-> PredictiveKeyboard:
@@ -112,8 +116,40 @@ def predict_next_word(bundle: ModelBundle, input_tensor: torch.Tensor) -> str:
     predicted_word = bundle.idx2word.get(predicted_idx, "<unk>")
     return predicted_word
 
-def write_output():
-    pass
+def write_output(raw_text: str, predicted_word: str, truncated: bool    ) -> None:
+    print(f"input: {raw_text}")
+    print(f"predicted word: {predicted_word}")
+    if truncated:
+        print(f"truncated: {truncated}")
 
-def main():
-    pass
+def main() -> None:
+    bundle = load_bundle()
+
+    raw_text = input("Enter text: ").strip()
+    if not raw_text:
+        print("No input provided.")
+        return
+
+    processed = preprocess_input(
+        text=raw_text,
+        word2idx=bundle.word2idx,
+        unknown_idx=bundle.unknown_idx,
+        sequence_length=bundle.sequence_length,
+    )
+
+    input_tensor = processed["input_tensor"]
+
+    if input_tensor.numel() == 0:
+        print("No valid tokens were produced from the input.")
+        return
+
+    predicted_word = predict_next_word(bundle, input_tensor)
+
+    write_output(
+        raw_text=processed["text"],
+        predicted_word=predicted_word,
+        truncated=processed["truncated"],
+    )
+
+if __name__ == "__main__":
+    main()
